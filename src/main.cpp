@@ -22,13 +22,13 @@ GLuint		vertex_buffer	= 0;	// ID holder for vertex buffer
 int		frame = 0;		// index of rendering frames
 bool    bUseSolidColor = true;
 static const int	TRIANGLE_PER_CIRCLE = 36;
-static const int	CIRCLE_COUNT = 400;
+static const int	CIRCLE_COUNT = 21;
 
 //*******************************************************************
 static const int		DEFAULT_WINDOW_WIDTH = 1280, DEFAULT_WINDOW_HEIGHT = 720;
 static float	window_width, window_height;
-static float	expand_max_x = 1.0f;
-static float	expand_max_y = 1.0f;
+float	expand_max_x = 1.0f;
+float	expand_max_y = 1.0f;
 float	prv_time, cur_time;
 
 static float	simul_speed = 1;
@@ -64,8 +64,6 @@ void overlayRestore(struct circleInfo * t1, struct circleInfo * t2, float timeVe
 		if (length(t1->xyz - t2->xyz) >= t1->scaler + t2->scaler) {
 			break;
 		}
-		if (i == 99)
-			printf("will make overlap\n");
 	}
 }
 int overlapCnt = 0;
@@ -78,7 +76,7 @@ void manageCircleCollision() {
 			float center_len = length(target->xyz - tc->xyz);
 			if (center_len <= target->scaler + tc->scaler) {
 				if (length(getPrvPosition(target) - getPrvPosition(tc)) > length(target->xyz - tc->xyz)) {
-					//overlayRestore(target, tc, prv_time - cur_time);
+					overlayRestore(target, tc, prv_time - cur_time);
 					vec3 xv_alia = tc->xyz - target->xyz;
 					vec3 yv_alia = { xv_alia.y, xv_alia.x*-1 , 0.0f };
 					xv_alia /= length(xv_alia);
@@ -89,12 +87,8 @@ void manageCircleCollision() {
 					vec3 tmp_xv1 = xv1;
 					xv1 = ((target->scaler - tc->scaler) / (target->scaler + tc->scaler)) * xv1 + ((tc->scaler * 2) / (target->scaler + tc->scaler))*xv2;
 					xv2 = ((tc->scaler - target->scaler) / (target->scaler + tc->scaler))* xv2 + ((target->scaler * 2) / (target->scaler + tc->scaler))*tmp_xv1;
-					//vec3 tmp_yv1 = yv1;
-					//yv1 = ((target->scaler - tc->scaler) / (target->scaler + tc->scaler)) * yv1 + ((tc->scaler * 2) / (target->scaler + tc->scaler))*yv2;
-					//yv2 = ((tc->scaler - target->scaler) / (target->scaler + tc->scaler))* yv2 + ((target->scaler * 2) / (target->scaler + tc->scaler))*tmp_yv1;
 					target->velocity = xv1 + yv1;
 					tc->velocity = xv2 + yv2;
-					overlayRestore(target, tc, cur_time - prv_time);
 				}
 			}
 		}
@@ -104,19 +98,15 @@ void manageBoundCollision() {
 	for (int i = 0; i < CIRCLE_COUNT; i++) {
 		struct circleInfo * c = &CircleInfo[i];
 		if (c->xyz.x + c->scaler >= expand_max_x && c->velocity.x > 0 ) {
-			//c->xyz.x -= 2 * (c->scaler - (expand_max_x - c->xyz.x));
 			c->velocity.x *= -1;
 		}
 		if (c->xyz.y + c->scaler >= expand_max_y && c->velocity.y > 0) {
-			//c->xyz.y -= 2 * (c->scaler - (expand_max_y - c->xyz.y));
 			c->velocity.y *= -1;
 		}
 		if (c->xyz.x - c->scaler <= expand_max_x * -1 && c->velocity.x < 0) {
-			//c->xyz.x += 2 * (c->scaler - (expand_max_x + c->xyz.x));
 			c->velocity.x *= -1;
 		}
 		if (c->xyz.y - c->scaler <= expand_max_y * -1 && c->velocity.y < 0) {
-			//c->xyz.y += 2 * (c->scaler - (expand_max_y + c->xyz.y));
 			c->velocity.y *= -1;
 		}
 	}
@@ -177,8 +167,7 @@ void renderWithUpdate()
 	// swap front and back buffers, and display to screen
 	glfwSwapBuffers(window);
 }
-void updateCircle() {
-}
+
 void initCircle() {
 	for (int i = 0; i < CIRCLE_COUNT; i++) {
 		bool isFind = false;
@@ -221,7 +210,6 @@ void reshape( GLFWwindow* window, int width, int height )
 		expand_max_x = 1;
 		expand_max_y = window_height / window_width;
 	}
-	updateCircle();
 	glViewport( 0, 0, width, height );
 }
 
